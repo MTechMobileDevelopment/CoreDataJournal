@@ -32,6 +32,9 @@ struct EntriesView: View {
                             self.selectedEntry = entry
                         }
                 }
+                .onDelete(perform: { indexSet in
+                    delete(at: indexSet)
+                })
             }
         }
         .navigationTitle(journal.title)
@@ -78,6 +81,13 @@ extension EntriesView {
 
     func showNewEntryView() {
         isShowingNewEntryView = true
+    }
+
+    func delete(at index: IndexSet) {
+        index.forEach { i in
+            let entry = journal.entriesArray[i]
+            JournalController.shared.delete(entry)
+        }
     }
 
 }

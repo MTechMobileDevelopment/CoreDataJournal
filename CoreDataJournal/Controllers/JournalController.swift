@@ -51,6 +51,11 @@ class JournalController {
         saveContext()
     }
 
+    func delete(_ entry: Entry) {
+        viewContext.delete(entry)
+        saveContext()
+    }
+
     func saveContext() {
         try? viewContext.save()
     }

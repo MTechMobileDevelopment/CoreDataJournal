@@ -101,6 +101,28 @@
     Text(relativeString)
   }
 ```
+
+### Deleting an Entry
+- Lets add swipe to delete to an entry. 
+- Its pretty easy in SwiftUI
+- Just add the `.onDelete` modifier to the List
+- And call this function inside the `onDelete`:
+    ```
+    func delete(at index: IndexSet) {
+        index.forEach { i in
+            let entry = journal.entriesArray[i]
+            JournalController.shared.delete(entry)
+        }
+    }
+    ```
+- And then add this new function to help you delete an Entry in the `JournalController`
+    ```
+     func delete(_ entry: Entry) {
+        viewContext.delete(entry)
+        saveContext()
+    }
+    ```
+
 ### Update an Entry
 - Finally we need a way to view and update an entry once its been created
 - Update the initializer of the `AddEditEntryView` to `init(journal: Journal, entry: Entry? = nil)` 
@@ -210,3 +232,7 @@
     - i.e. entry.journal = journal 
     - That means you'll need to pass in a Journal to the `AddEditEntryView` so you have it when you create a new `Entry`
 - Make sure the `journal` property you pass in to the `EntriesView` is an `@ObservedObject` so the list of entries updates when you make a new one
+
+
+## Black Diamon
+- Add ability to edit a journal as well as edit an Entry
