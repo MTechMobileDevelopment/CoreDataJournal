@@ -13,8 +13,12 @@ struct CoreDataJournalApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            JournalsView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .onAppear {
+                    print("Documents Directory: ", FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).last ?? "Not Found!")
+
+                }
         }
     }
 }
