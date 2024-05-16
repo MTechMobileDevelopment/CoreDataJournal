@@ -234,5 +234,8 @@
 - Make sure the `journal` property you pass in to the `EntriesView` is an `@ObservedObject` so the list of entries updates when you make a new one
 
 
-## Black Diamon
+## Black Diamond
+- Add swipe to delete for Journals as well
 - Add ability to edit a journal as well as edit an Entry
+- Add any number of new fields to the `Journal` or `Entry`, such as the location where the Entry was created.
+- Add the ability to create a protected journal that requires a password or faceId to open it. 
