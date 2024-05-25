@@ -1,15 +1,16 @@
-## Overview
+# Overview
 - We're going to be building a journaling app that allows you to post entries that are managed in multiple books. 
 - Part 1 will be creating and showing Entries. 
 - Part 2 will be managing Journals
+- Part 3 will be migrating to SwiftData
 - New things we'll be covering:
     - SwiftUI + CD
     - Relationships
     - Image storage
     - Manual Code Gen
     
-## Part 1
-### Setup
+# Part 1
+## Setup
 - Create a new XCode project
     - Name: CoreDataJournal
     - Interface: SwiftUI
@@ -18,7 +19,7 @@
 - Build & Run
 - Take a look at the boilerplate code Apple provides
 
-### Model
+## Model
 - Start with the ManagedObjectModel
 - Delete the `Item` entity that was already there
 - Add a new entity called (`Entry`)
@@ -29,7 +30,7 @@
     - createdAt: `Date`
     - imageData: `BinaryData`
 - Set the CodeGen to `Manual` (we're going to manage the model files ourselves in this project)
-### Manual Code Gen
+## Manual Code Gen
 - With the CodeGen set to Manual/None Core Data won't generate the model file for us `Entry.swift`
 - The proper way to generate this file is with an XCode tool: Click into the CoreData Model editor then click on Editor > Create NSManagedObject Subclass
 - This generates the files for you with the properties set up in the Core Data Model
@@ -39,7 +40,7 @@
     - Just be careful, if you forget to add a property that is not optional, the app will crash. 
     - Also remember, if you change the model, you'll need to delete those `Entry+CoreDataClass` and `Entry+CoreDataProperties` files and regenerate new ones
 
-### Entry creation
+## Entry creation
 - Rename ContentView to EntriesView
 - Create a new view called `AddEditEntryView`
 - Present this view in a sheet when the user hits the plus button
@@ -54,7 +55,7 @@
 - If the user uploads a photo (not required) we will upload the photo as binary data
 - Then convert it back from Data to Image to display it with the `Entry`
 
-### Journal Controller
+## Journal Controller
 
 - Make a new file `JournalController.swift`
 - This is where we'll do a lot of the interfacing with Core Data (similar to Core Data To Do List)
@@ -76,7 +77,7 @@
 - Save the view context to commit the changes in the context to the persistant store
 - Then dismiss the sheet
 
-### Entries List
+## Entries List
 - Why doesn't the new entry show up in the `EntriesView`?
 - What do we have to do to get it to show up?
 - Queue fetch request. We learned a bit about fetch requests in the ToDoList app. 
@@ -102,7 +103,7 @@
   }
 ```
 
-### Deleting an Entry
+## Deleting an Entry
 - Lets add swipe to delete to an entry. 
 - Its pretty easy in SwiftUI
 - Just add the `.onDelete` modifier to the List
@@ -123,7 +124,7 @@
     }
     ```
 
-### Update an Entry
+## Update an Entry
 - Finally we need a way to view and update an entry once its been created
 - Update the initializer of the `AddEditEntryView` to `init(journal: Journal, entry: Entry? = nil)` 
     - Also make sure to set the initial values on init so whene editing the initilal values are set
@@ -140,8 +141,8 @@
 - You'll need this `@State private var selectedEntry: Entry?` to make that sheet work. 
 - Set the `selectedEntry` when the user taps on an Entry Cell view
 
-## Part 2 Journals
-### Relationship
+# Part 2 Journals
+## Relationship
 
 - Once you've got entries saving and showing its time to take it to the next level. 
 - We want the user to be able to create multiple Journals each holding any number of entries
@@ -166,7 +167,7 @@
 - Now remember we are manually managing these entities. 
     - So we'll need to delete the `Entry` files and generate new ones. Both Entry and Journal will our  (Editor > Create NSManagedObject Subclass)
 
-### Journal List
+## Journal List
 - Create two new files: `JournalsView.swift` and `AddEditJournalView.swift`
 - The JournalsView:
     - Will be kind of similar to the `EntriesView`
@@ -189,7 +190,7 @@
 - Instead pass in a `Journal` into the `EntriesView` on initialization
 - Show the list of entries like this: `List(journal.entriesArray) { entry in `
 
-### Journal Creation
+## Journal Creation
 - The last part is creating new Journals (you're so close, hang in there)
 - The `AddEditJournalView` will be similar to the `AddEditEntryView`
     - It should have a textfield so the user can write the title
@@ -206,7 +207,7 @@
         - Give the new Journal an id (UUID().uuidString), a title from the title param, createdAt of the current date.
         - What about the color of the journal?
 
-### Saving Color
+## Saving Color
 - How do we save a color to Core Data?
 - Well, there's more than one way. 
 - For today, we'll just convert the color to a hex value and save it as a string. Then convert that hex string back to a color 
@@ -239,3 +240,61 @@
 - Add ability to edit a journal as well as edit an Entry
 - Add any number of new fields to the `Journal` or `Entry`, such as the location where the Entry was created.
 - Add the ability to create a protected journal that requires a password or faceId to open it. 
+
+# Part 3 SwiftData
+- Now that we've seen this app working with Core Data, we're going to convert it to SwiftData! 
+- SwiftData actually requires a lot LESS code, so we will end up deleting more code than we add
+
+## Model
+- We'll delete the model eventually but not quite yet. 
+- Delete the generated `Journal` and `Entry` model classes that Core Data generated
+- Use the Editor > Create SwiftData code to generate the new SwiftData files
+- Once you've done that you can delete the `.xcdatamodel` file 
+
+## Stack
+- Delete the `Persistence.swift` file. We'll set up the SwiftData stack in a new way. 
+- Inside the `CoreDataJournalApp.swift` add this code as your new SwiftData 'stack':
+```
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema([
+            Journal.self,
+            Entry.self
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
+```
+- Then insert it into the root view like this:
+`JournalsView().modelContext(sharedModelContainer.mainContext)`
+
+## Crud
+- Creating SwiftData objects is similar but we get to use the initializer we made in the `@Model` classes
+- First update the Entry initializer to look like this:
+`init(journal: Journal, title: String, body: String, imageData: Data?)`
+- And the `Journal` initializer to look like this:
+`init(title: String, colorHex: String?)`
+- Then when you create a new `Entry`, initialize it with that initializer and insert it into the modelContext (very similar to how CoreData works)
+- Note: you don't have to save the modelContext, it should save automatically
+- Deleting and updating are also very similar if you just use the modelContext
+
+### Fetching
+- Fetching is the one that changed the most
+- You'll use `@Query` instead of `@FetchRequest`
+- Should look like this for journals:
+` @Query(sort: \Journal.createdAt, order: .reverse) var journals: [Journal]`
+- Entries you can still use the `journal.entries`
+- But if you want it to update properly you ned to add this to `EntriesView` so the UI knows to refresh when new entries are created:
+`@Query(sort: \Entry.createdAt) var entries: [Entry]`
+
+## Part 3 Notes
+- There might be some other little things you need to do. 
+- Start with the errors and see how far that gets you. 
+- If you need to check out the `SwiftData` branch and take a quick peek to help you out, that's fine, just don't copy everything from there. 
+- See if the app can function properly using SwiftData to know if you're done!
+
+Good Luck!

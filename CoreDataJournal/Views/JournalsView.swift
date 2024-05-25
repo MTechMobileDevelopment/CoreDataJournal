@@ -6,13 +6,11 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct JournalsView: View {
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Entry.createdAt, ascending: false)],
-        animation: .default)
-    private var journals: FetchedResults<Journal>
+    @Query(sort: \Journal.createdAt, order: .reverse) var journals: [Journal]
 
     @State private var isShowingNewJournalView = false
 
@@ -51,7 +49,7 @@ struct JournalsView: View {
                 Text(journal.title)
                     .bold()
 
-                Text("Entries: \(journal.entriesArray.count)")
+                Text("Entries: \(journal.entries.count)")
                     .foregroundStyle(.secondary)
                     .font(.subheadline)
             }

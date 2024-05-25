@@ -6,18 +6,20 @@
 //
 
 import SwiftUI
-import CoreData
+import SwiftData
 
 var relativeDateFormatter: RelativeDateTimeFormatter = {
     let formatter = RelativeDateTimeFormatter()
-    formatter.dateTimeStyle = .numeric
+    formatter.dateTimeStyle = .named
     return formatter
 }()
 
 struct EntriesView: View {
-    @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.modelContext) private var context
 
-    @ObservedObject var journal: Journal
+    @Query(sort: \Entry.createdAt) var entries: [Entry]
+
+     var journal: Journal
 
     @State private var isShowingNewEntryView = false
     @State private var selectedEntry: Entry?
@@ -26,7 +28,7 @@ struct EntriesView: View {
     var body: some View {
         VStack {
             List {
-                ForEach(journal.entriesArray) { entry in
+                ForEach(journal.entries) { entry in
                     entryView(entry)
                         .onTapGesture {
                             self.selectedEntry = entry
@@ -85,8 +87,8 @@ extension EntriesView {
 
     func delete(at index: IndexSet) {
         index.forEach { i in
-            let entry = journal.entriesArray[i]
-            JournalController.shared.delete(entry)
+            let entry = journal.entries[i]
+            context.delete(entry)
         }
     }
 

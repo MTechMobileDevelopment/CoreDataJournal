@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AddEditEntryView: View {
+
+    @Environment(\.modelContext) var context
     @Environment(\.dismiss) private var dismiss
 
     var journal: Journal
@@ -46,14 +48,14 @@ struct AddEditEntryView: View {
 
                 Button(action: save) {
                     Text("Save")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .foregroundStyle(Color.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .foregroundStyle(Color.blue)
+                        )
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .foregroundStyle(Color.white)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .foregroundStyle(Color.blue)
-                )
                 .contentShape(Rectangle())
                 .opacity(saveIsDisabled ? 0.5 : 1)
                 .disabled(saveIsDisabled)
@@ -99,21 +101,25 @@ struct AddEditEntryView: View {
 
     func save() {
         if let entry {
-            JournalController.shared.updateEntry(
-                entry: entry,
-                title: title,
-                body: bodyString,
-                image: selectedImage
-            )
+            update(entry)
         } else {
-            JournalController.shared.createNewEntry(
-                in: journal,
-                title: title,
-                body: bodyString,
-                image: selectedImage
-            )
+            createNewEntry()
         }
         dismiss()
+    }
+
+    func update(_ entry: Entry) {
+        entry.title = title
+        entry.body = bodyString
+        entry.imageData = selectedImage?.jpegData(compressionQuality: 0.75)
+        try? context.save()
+    }
+
+    func createNewEntry() {
+        let imageData = selectedImage?.jpegData(compressionQuality: 0.75)
+        let newEntry = Entry(journal: journal, title: title, body: bodyString, imageData: imageData)
+        context.insert(newEntry)
+        try? context.save()
     }
 
 }

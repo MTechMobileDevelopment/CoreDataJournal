@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AddEditJournalView: View {
 
+    @Environment(\.modelContext) var context
     @Environment(\.dismiss) var dismiss
 
     @State private var title = ""
@@ -50,7 +51,8 @@ struct AddEditJournalView: View {
     }
 
     func save() {
-        JournalController.shared.createNewJournal(title: title, color: selectedColor)
+        let newJournal = Journal(title: title, colorHex: selectedColor.toHexString())
+        context.insert(newJournal)
         dismiss()
     }
 
